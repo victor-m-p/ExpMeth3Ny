@@ -17,7 +17,7 @@ In this warm-up assignment you will:
 
 ## Learning objectives:
 
-- Become comfortable with tidyverse (and R in general)
+- Become comfortable with tidyverse (and R in general) Hej Clement
 - Test out the git integration with RStudio
 - Build expertise in data wrangling (which will be used in future assignments)
 
