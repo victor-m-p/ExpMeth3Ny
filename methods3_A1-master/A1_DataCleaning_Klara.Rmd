@@ -59,6 +59,8 @@ If you're not in a project in Rstudio, make sure to set your working directory h
 If you created an RStudio project, then your working directory (the directory with your data and code for these assignments) is the project directory.
 
 ```{r}
+
+# Loading the necessary packages
 pacman::p_load(tidyverse,janitor)
 ```
 
@@ -68,10 +70,9 @@ Load the three data sets, after downloading them from Github and saving them in 
 * Word data: token_train.csv
 
 ```{r}
+# Loading all the three datasets
 demo_train = read_csv('demo_train.csv')
-
 LU_train = read_csv('LU_train.csv')
-
 token_train = read_csv('token_train.csv')
 ```
 
@@ -83,15 +84,10 @@ Welcome to real world of messy data :-)
 
 ```{r}
 head(demo_train)
-
 summary(demo_train)
-
 head(LU_train)
-
 summary(LU_train)
-
 head(token_train)
-
 summary(token_train)
 
 ```
@@ -108,6 +104,8 @@ Tip: look through the chapter on data transformation in R for data science (http
 
 
 ```{r}
+
+# Renaming the column names of subject ID and visit nr., so it is consistent throughout all three datasets 
 colnames(demo_train)[1] <- "SUBJ"
 colnames(demo_train)[2] <- "VISIT"
 
@@ -119,6 +117,7 @@ Tip: The stringr package is what you need. str_extract() will allow you to extra
 
 
 ```{r}
+# Using the str_extract() function to remove anything from the values of the VISIT variable, that are not numbers
 demo_train$VISIT <- str_extract(demo_train$VISIT,"[\\d]")
 LU_train$VISIT <- str_extract(LU_train$VISIT,"[\\d]")
 token_train$VISIT <- str_extract(token_train$VISIT,"[\\d]")
@@ -132,6 +131,7 @@ Tip: You can either have one line of code for each child name that is to be chan
 
 
 ```{r}
+# Removing all "." from the ID's of the participants, to align the three datasets
 demo_train$SUBJ <- str_replace_all(demo_train$SUBJ,'[.]','')
 LU_train$SUBJ <- str_replace_all(LU_train$SUBJ,'[.]','')
 token_train$SUBJ <- str_replace_all(token_train$SUBJ,'[.]','')
@@ -170,14 +170,15 @@ Most variables should make sense, here the less intuitive ones.
 Feel free to rename the variables into something you can remember (i.e. nonVerbalIQ, verbalIQ)
 
 ```{r}
+# Selecting the needed variables from the demo dataset using the select() function
 demo_train_sub <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
 
-
+# Renaming the two variables with measures of intelligence for convenience
 colnames(demo_train_sub)[8] <- "nvIQ"
 colnames(demo_train_sub)[9] <- "vIQ"
-  
-LU_train_sub <- select(LU_train, SUBJ, VISIT, CHI_MLU, MOT_MLU)
 
+# Selecting the desired variables from the two other datasets  
+LU_train_sub <- select(LU_train, SUBJ, VISIT, CHI_MLU, MOT_MLU)
 token_train_sub <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 
 ```
@@ -189,11 +190,10 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
+# Merging first two of the datasets into one and then merge with the third, so that all three datasets are now combined into one called "df"
 df1 <- merge(demo_train_sub, LU_train_sub)
-
 df <- merge(df1, token_train_sub)
 
-View(df)
 ```
 
 
@@ -208,19 +208,24 @@ A possible way to do so:
 
 
 ```{r}
-data_sub <- df %>% 
-  select(SUBJ,VISIT,ADOS,vIQ,nvIQ,Socialization) %>% 
-  filter(VISIT=="1") %>% 
-  subset(select=-VISIT) %>% 
-  rowid_to_column("ID")
 
+# Wishing to only keep the "visit 1" scores in the four clinical variables of the ADOS score, the verbal IQ, the nonverbal IQ and the socialization score, a subset is created where those four, subject ID is included only for the first visit for each participant. A column with a number ID is also created while there is just one column for each participant, which can then be used as identifier instead of the "SUBJ" variable.   
+data_sub <- df %>% 
+  select(SUBJ,VISIT,ADOS,vIQ,nvIQ,Socialization) %>% # Selecting the desired variables
+  filter(VISIT=="1") %>% # Choosing only the rows from the first visit
+  subset(select=-VISIT) %>% # Removing the "VISIT" column
+  rowid_to_column("ID") # Creating a new column with a number for each row, which in this case equals each participant
+
+# Removing the existing clinical variables from the dataframe "df"
 df <- subset(df,select=-c(ADOS,vIQ,nvIQ,Socialization))
 
+# Merging the two dataframes by the "SUBJ" variable
 df <- merge(data_sub,df, by = "SUBJ")
 
+# Removing the "SUBJ" variable 
 df <- subset(df,select = -SUBJ)
 
-View(df)
+
 ```
 
 2g. Final touches
@@ -231,6 +236,16 @@ Now we want to
 * Save the data set using into a csv file. Hint: look into write.csv()
 
 ```{r}
+# Substituting the numbers in the Gender variable for F for females and M for males as well as making the variable a factor
+df$Gender <- ifelse(df$Gender=="1","F","M")
+df$Gender <- as.factor(df$Gender)
+
+# Substituting the letters in the Diagnosis variable for ASD instead of A and TD instead of B as well as making the variable a factor
+df$Diagnosis <- ifelse(df$Diagnosis=="A","ASD","TD")
+df$Diagnosis <- as.factor(df$Diagnosis)
+
+# Write the dataframe into a csv file and save it
+write.csv(df, "cleanedData.csv",row.names = FALSE)
 
 ```
 
