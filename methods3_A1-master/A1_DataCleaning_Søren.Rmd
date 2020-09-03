@@ -127,7 +127,6 @@ Tip: The stringr package is what you need. str_extract() will allow you to extra
 
 ```{r}
 
-
 ```
 
 2c. We also need to make a small adjustment to the content of the Child.ID coloumn in the demographic data. Within this column, names that are not abbreviations do not end with "." (i.e. Adam), which is the case in the other two data sets (i.e. Adam.). If The content of the two variables isn't identical the rows will not be merged.
@@ -155,7 +154,7 @@ The variables we need are:
 * MullenRaw, 
 * ExpressiveLangRaw, 
 * Socialization
-* MOT_MLU, 
+* MOT_MLU,
 * CHI_MLU, 
 * types_MOT, 
 * types_CHI, 
@@ -174,6 +173,11 @@ Most variables should make sense, here the less intuitive ones.
 Feel free to rename the variables into something you can remember (i.e. nonVerbalIQ, verbalIQ)
 
 ```{r}
+demo_train_sub <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
+  
+LU_train_sub <- select(LU_train, SUBJ, VISIT, CHI_MLU, MOT_MLU)
+
+token_train_sub <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 
 ```
 
@@ -184,7 +188,9 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
+df1 <- merge(demo_train_sub, LU_train_sub)
 
+df <- merge(df1, token_train_sub)
 
 ```
 
