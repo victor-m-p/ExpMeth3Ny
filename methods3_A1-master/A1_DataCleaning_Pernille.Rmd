@@ -114,17 +114,17 @@ demo_train <- demo_train %>%
     SUBJ = Child.ID,
     VISIT = Visit
     )
-#gsub(",", "", string)
 
-#removing letters in LU_train
+#removing letters in LU_train and token train
 LU_train$VISIT <- as.integer(gsub('[a-zA-Z]', '',LU_train$VISIT))
+token_train$VISIT <- as.integer(gsub('[a-zA-Z]', '',token_train$VISIT))
 
 #removing punctuation
 demo_train$SUBJ <- gsub('[.]','', demo_train$SUBJ)
 LU_train$SUBJ <- gsub('[.]','', LU_train$SUBJ)
 token_train$SUBJ <- gsub('[.]','', token_train$SUBJ)
+token_train$VISIT <- gsub('[.]','', token_train$VISIT)
 
-#
 ```
 
 2b. Find a way to homogeneize the way "visit" is reported (visit1 vs. 1).
@@ -133,18 +133,21 @@ Tip: The stringr package is what you need. str_extract () will allow you to extr
 
 
 ```{r}
-str_extract()
+LU_train_test <- read_csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/LU_train.csv")
+LU_train_test$VISIT <- data.frame(str_extract(LU_train_test$VISIT, "\\d"))
+
 ```
 
 2c. We also need to make a small adjustment to the content of the Child.ID coloumn in the demographic data. Within this column, names that are not abbreviations do not end with "." (i.e. Adam), which is the case in the other two data sets (i.e. Adam.). If The content of the two variables isn't identical the rows will not be merged.
-A neat way to solve the problem is simply to remove all "." in all datasets.
+A neat way to solve the problem is simply to remove all "." in all datasets. 
+*we did this*
 
 Tip: stringr is helpful again. Look up str_replace_all
 Tip: You can either have one line of code for each child name that is to be changed (easier, more typing) or specify the pattern that you want to match (more complicated: look up "regular expressions", but less typing)
 
 
 ```{r}
-
+#str_replace_all(, "\\s+", " ") #how to use str_replace_all(text, "\\s+", " ")
 ```
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
@@ -190,7 +193,18 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
+#selecting the relevant columns
+rel_demo_train <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS,  MullenRaw, ExpressiveLangRaw, Socialization)
 
+rel_LU_train <- select(LU_train, SUBJ, VISIT, MOT_MLU, CHI_MLU)
+
+rel_token_train <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
+
+#merging two of the dataframes
+combined_data <- merge(rel_demo_train, rel_LU_train)
+
+#new dataframe with all dataframes merged
+all_data <- merge(combined_data, rel_token_train)
 
 ```
 
