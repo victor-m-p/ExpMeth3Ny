@@ -111,13 +111,6 @@ Tip: look through the chapter on data transformation in R for data science (http
 colnames(demo_train)[1] <- "SUBJ"
 colnames(demo_train)[2] <- "VISIT"
 
-demo_train$SUBJ <- gsub('[.]','', demo_train$SUBJ)
-LU_train$SUBJ <- gsub('[.]','', LU_train$SUBJ)
-token_train$SUBJ <- gsub('[.]','', token_train$SUBJ)
-
-LU_train$VISIT <- as.integer(gsub('[a-zA-Z]', '',LU_train$VISIT))
-token_train$VISIT <- as.integer(gsub('[a-zA-Z]', '',token_train$VISIT))
-
 ```
 
 2b. Find a way to homogeneize the way "visit" is reported (visit1 vs. 1).
@@ -126,7 +119,9 @@ Tip: The stringr package is what you need. str_extract() will allow you to extra
 
 
 ```{r}
-
+demo_train$VISIT <- str_extract(demo_train$VISIT,"[\\d]")
+LU_train$VISIT <- str_extract(LU_train$VISIT,"[\\d]")
+token_train$VISIT <- str_extract(token_train$VISIT,"[\\d]")
 ```
 
 2c. We also need to make a small adjustment to the content of the Child.ID coloumn in the demographic data. Within this column, names that are not abbreviations do not end with "." (i.e. Adam), which is the case in the other two data sets (i.e. Adam.). If The content of the two variables isn't identical the rows will not be merged.
@@ -137,7 +132,9 @@ Tip: You can either have one line of code for each child name that is to be chan
 
 
 ```{r}
-
+demo_train$SUBJ <- str_replace_all(demo_train$SUBJ,'[.]','')
+LU_train$SUBJ <- str_replace_all(LU_train$SUBJ,'[.]','')
+token_train$SUBJ <- str_replace_all(token_train$SUBJ,'[.]','')
 ```
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
@@ -174,6 +171,10 @@ Feel free to rename the variables into something you can remember (i.e. nonVerba
 
 ```{r}
 demo_train_sub <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
+
+
+colnames(demo_train_sub)[8] <- "nvIQ"
+colnames(demo_train_sub)[9] <- "vIQ"
   
 LU_train_sub <- select(LU_train, SUBJ, VISIT, CHI_MLU, MOT_MLU)
 
@@ -192,6 +193,7 @@ df1 <- merge(demo_train_sub, LU_train_sub)
 
 df <- merge(df1, token_train_sub)
 
+View(df)
 ```
 
 
@@ -206,7 +208,19 @@ A possible way to do so:
 
 
 ```{r}
+data_sub <- df %>% 
+  select(SUBJ,VISIT,ADOS,vIQ,nvIQ,Socialization) %>% 
+  filter(VISIT=="1") %>% 
+  subset(select=-VISIT) %>% 
+  rowid_to_column("ID")
 
+df <- subset(df,select=-c(ADOS,vIQ,nvIQ,Socialization))
+
+df <- merge(data_sub,df, by = "SUBJ")
+
+df <- subset(df,select = -SUBJ)
+
+View(df)
 ```
 
 2g. Final touches
