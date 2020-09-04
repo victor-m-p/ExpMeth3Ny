@@ -136,6 +136,8 @@ Tip: The stringr package is what you need. str_extract () will allow you to extr
 LU_train_test <- read_csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/LU_train.csv")
 LU_train_test$VISIT <- data.frame(str_extract(LU_train_test$VISIT, "\\d"))
 
+
+
 ```
 
 2c. We also need to make a small adjustment to the content of the Child.ID coloumn in the demographic data. Within this column, names that are not abbreviations do not end with "." (i.e. Adam), which is the case in the other two data sets (i.e. Adam.). If The content of the two variables isn't identical the rows will not be merged.
@@ -148,6 +150,9 @@ Tip: You can either have one line of code for each child name that is to be chan
 
 ```{r}
 #str_replace_all(, "\\s+", " ") #how to use str_replace_all(text, "\\s+", " ")
+
+
+# USE STR REPLACE ALL - tidyvserse
 ```
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
@@ -183,6 +188,12 @@ Most variables should make sense, here the less intuitive ones.
 Feel free to rename the variables into something you can remember (i.e. nonVerbalIQ, verbalIQ)
 
 ```{r}
+#selecting the relevant columns
+rel_demo_train <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS,  MullenRaw, ExpressiveLangRaw, Socialization)
+
+rel_LU_train <- select(LU_train, SUBJ, VISIT, MOT_MLU, CHI_MLU)
+
+rel_token_train <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 
 ```
 
@@ -193,12 +204,6 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
-#selecting the relevant columns
-rel_demo_train <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS,  MullenRaw, ExpressiveLangRaw, Socialization)
-
-rel_LU_train <- select(LU_train, SUBJ, VISIT, MOT_MLU, CHI_MLU)
-
-rel_token_train <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 
 #merging two of the dataframes
 combined_data <- merge(rel_demo_train, rel_LU_train)
@@ -210,7 +215,8 @@ all_data <- merge(combined_data, rel_token_train)
 
 
 2f. Only using clinical measures from Visit 1
-In order for our models to be useful, we want to miimize the need to actually test children as they develop. In other words, we would like to be able to understand and predict the children's linguistic development after only having tested them once. Therefore we need to make sure that our ADOS, MullenRaw, ExpressiveLangRaw and Socialization variables are reporting (for all visits) only the scores from visit 1.
+In order for our models to be useful, we want to minimize the need to actually test children as they develop. In other words, we would like to be able to understand and predict the children's linguistic development after only having tested them once. 
+Therefore we need to make sure that our ADOS, MullenRaw, ExpressiveLangRaw and Socialization variables are reporting (for all visits) only the scores from visit 1.
 
 A possible way to do so:
 * create a new dataset with only visit 1, child id and the 4 relevant clinical variables to be merged with the old dataset
@@ -218,8 +224,10 @@ A possible way to do so:
 * merge the new dataset with the old
 
 
-
 ```{r}
+# making dataset with only visit 1, SUBJ (before child-id) and the 4 relevant clinical variables to be merged with the old dataset
+only_visit1 <- filter(all_data, all_data$VISIT == 1)
+
 
 ```
 
