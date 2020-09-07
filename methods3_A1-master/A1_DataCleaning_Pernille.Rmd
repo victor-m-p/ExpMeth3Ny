@@ -95,6 +95,7 @@ head(token_train)
 
 summary(token_train)
 
+
 ```
 
 Before being able to combine the data sets we need to make sure the relevant variables have the same names and the same kind of values.
@@ -133,10 +134,10 @@ Tip: The stringr package is what you need. str_extract () will allow you to extr
 
 
 ```{r}
-LU_train_test <- read_csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/LU_train.csv")
-LU_train_test$VISIT <- data.frame(str_extract(LU_train_test$VISIT, "\\d"))
-
-
+# Using the str_extract() function to remove anything from the values of the VISIT variable, that are not numbers
+demo_train$VISIT <- str_extract(demo_train$VISIT,"[\\d]")
+LU_train$VISIT <- str_extract(LU_train$VISIT,"[\\d]")
+token_train$VISIT <- str_extract(token_train$VISIT,"[\\d]")
 
 ```
 
@@ -149,10 +150,10 @@ Tip: You can either have one line of code for each child name that is to be chan
 
 
 ```{r}
-#str_replace_all(, "\\s+", " ") #how to use str_replace_all(text, "\\s+", " ")
-
-
-# USE STR REPLACE ALL - tidyvserse
+# Removing all "." from the ID's of the participants, to align the three datasets
+demo_train$SUBJ <- str_replace_all(demo_train$SUBJ,'[.]','')
+LU_train$SUBJ <- str_replace_all(LU_train$SUBJ,'[.]','')
+token_train$SUBJ <- str_replace_all(token_train$SUBJ,'[.]','')
 ```
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
@@ -188,12 +189,16 @@ Most variables should make sense, here the less intuitive ones.
 Feel free to rename the variables into something you can remember (i.e. nonVerbalIQ, verbalIQ)
 
 ```{r}
-#selecting the relevant columns
-rel_demo_train <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS,  MullenRaw, ExpressiveLangRaw, Socialization)
+# Selecting the needed variables from the demo dataset using the select() function
+demo_train_sub <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
 
-rel_LU_train <- select(LU_train, SUBJ, VISIT, MOT_MLU, CHI_MLU)
+# Renaming the two variables with measures of intelligence for convenience
+colnames(demo_train_sub)[8] <- "nvIQ"
+colnames(demo_train_sub)[9] <- "vIQ"
 
-rel_token_train <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
+# Selecting the desired variables from the two other datasets  
+LU_train_sub <- select(LU_train, SUBJ, VISIT, CHI_MLU, MOT_MLU)
+token_train_sub <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 
 ```
 
@@ -204,19 +209,14 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
-
-#merging two of the dataframes
-combined_data <- merge(rel_demo_train, rel_LU_train)
-
-#new dataframe with all dataframes merged
-all_data <- merge(combined_data, rel_token_train)
-
+# Merging first two of the datasets into one and then merge with the third, so that all three datasets are now combined into one called "df"
+df1 <- merge(demo_train_sub, LU_train_sub)
+df <- merge(df1, token_train_sub)
 ```
-
 
 2f. Only using clinical measures from Visit 1
 In order for our models to be useful, we want to minimize the need to actually test children as they develop. In other words, we would like to be able to understand and predict the children's linguistic development after only having tested them once. 
-Therefore we need to make sure that our ADOS, MullenRaw, ExpressiveLangRaw and Socialization variables are reporting (for all visits) only the scores from visit 1.
+Therefore we need to make sure that our *ADOS, MullenRaw, ExpressiveLangRaw and Socialization* variables are reporting (for all visits) only the scores from visit 1.
 
 A possible way to do so:
 * create a new dataset with only visit 1, child id and the 4 relevant clinical variables to be merged with the old dataset
@@ -225,9 +225,21 @@ A possible way to do so:
 
 
 ```{r}
-# making dataset with only visit 1, SUBJ (before child-id) and the 4 relevant clinical variables to be merged with the old dataset
-only_visit1 <- filter(all_data, all_data$VISIT == 1)
+# Wishing to only keep the "visit 1" scores in the four clinical variables of the ADOS score, the verbal IQ, the nonverbal IQ and the socialization score, a subset is created where for those four, subject ID is included only for the first visit for each participant. A column with a number ID is also created while there is just one row for each participant, which can then be used as identifier instead of the "SUBJ" variable.   
+data_sub <- df %>% 
+  select(SUBJ,VISIT,ADOS,vIQ,nvIQ,Socialization) %>% # Selecting the desired variables
+  filter(VISIT=="1") %>% # Choosing only the rows from the first visit
+  subset(select=-VISIT) %>% # Removing the "VISIT" column
+  rowid_to_column("ID") # Creating a new column with a number for each row, which in this case equals each participant
 
+# Removing the existing clinical variables from the dataframe "df"
+df <- subset(df,select=-c(ADOS,vIQ,nvIQ,Socialization))
+
+# Merging the two dataframes by the "SUBJ" variable
+df <- merge(data_sub,df, by = "SUBJ")
+
+# Removing the "SUBJ" variable 
+df <- subset(df,select = -SUBJ)
 
 ```
 
@@ -235,11 +247,22 @@ only_visit1 <- filter(all_data, all_data$VISIT == 1)
 
 Now we want to
 * anonymize our participants (they are real children!). 
-* make sure the variables have sensible values. E.g. right now gender is marked 1 and 2, but in two weeks you will not be able to remember, which gender were connected to which number, so change the values from 1 and 2 to F and M in the gender variable. For the same reason, you should also change the values of Diagnosis from A and B to ASD (autism spectrum disorder) and TD (typically developing). Tip: Try taking a look at ifelse(), or google "how to rename levels in R".
+* make sure the variables have sensible values. E.g. right now gender is marked 1 and 2, but in two weeks you will not be able to remember, which gender were connected to which number, so change the values from 1 and 2 to F and M in the gender variable. *1 is M, 2 is F*
+
+For the same reason, you should also change the values of Diagnosis from A and B to ASD (autism spectrum disorder) and TD (typically developing). Tip: Try taking a look at ifelse(), or google "how to rename levels in R".
 * Save the data set using into a csv file. Hint: look into write.csv()
 
 ```{r}
+#Anonymization was already done
 
+# 1 is male, 2 is female
+df$Gender <- ifelse(df$Gender == 1,"M","F")
+
+# Diagnosis
+df$Diagnosis <- ifelse(df$Diagnosis == "A", "ASD","TD")
+
+# Writing as a csv file
+write.csv(df, "cleanData.csv")
 ```
 
 
@@ -255,6 +278,31 @@ List all kids who:
 3. have not completed all trials. Tip: Use pipes to solve this
 
 ```{r}
+# 1. #group_by ID, make column of that, renaming it
+subdf1 <- df %>% 
+  group_by(ID) %>% 
+  mutate(mean(CHI_MLU)) %>% 
+  rename(
+    mean_CHI_MLU = `mean(CHI_MLU)`
+    ) %>% 
+  ungroup()
+
+  #filter over 2.7
+  subdf1 <- filter(subdf1, subdf1$mean_CHI_MLU>2.7)
+
+# 2. have a mean length of utterance of less than 1,5 morphemes
+df$VISIT <- as.numeric(df$VISIT)
+
+subdf2 <- filter(df,df$VISIT == 1)
+
+subdf2 <- filter(subdf2, subdf2$CHI_MLU<1.5)
+
+# 3. 
+subdf3 <- df %>% group_by(ID) %>% filter(sum(VISIT) != 21) #Sørens way of doing it
+
+subdf3 <- df %>% 
+  group_by(ID) %>% 
+  filter(NROW(VISIT) == 6) #omit all subjects without 6 lines of visits
 
 
 ```
@@ -266,7 +314,16 @@ USING ARRANGE
 2. Sort kids to find the kid who produced the least amount of words on the 1st visit.
 
 ```{r}
+# 1. Most tokens on 6th visit
+tokens1 <- 
+  df %>% subset(VISIT == 6) %>% arrange(desc(tokens_CHI))
 
+# 2. Least tokens on 1st visit
+tokens2 <- 
+  df %>% subset(VISIT == 1) %>% arrange(tokens_CHI)
+
+tokens1[1,1] #kid nr 55
+tokens2[1,1] #kid nr 57
 
 ```
 
@@ -276,7 +333,11 @@ USING SELECT
 2. What happens if you include the name of a variable multiple times in a select() call?
 
 ```{r}
+# 1. 
+df_sub <- 
+  df %>% select(Diagnosis,CHI_MLU,tokens_CHI)
 
+# 2. nothing
 ```
 
 
@@ -286,6 +347,15 @@ USING MUTATE, SUMMARISE and PIPES
 3. The solution to task above enables us to assess the average amount of words produced by each child. Why don't we just use these average values to describe the language production of the children? What is the advantage of keeping all the data?
 
 ```{r}
+# 1
+df1 <- df %>% 
+  group_by(ID) %>% mutate(m_tokens_CHI = mean(tokens_CHI)) 
+
+# 2
+df2 <- df %>% 
+  group_by(ID) %>% summarise(m_tokens_CHI = mean(tokens_CHI))
+
+
 
 
 ```
