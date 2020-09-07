@@ -83,6 +83,7 @@ In particular:
 Welcome to real world of messy data :-)
 
 ```{r}
+
 head(demo_train)
 summary(demo_train)
 head(LU_train)
@@ -264,7 +265,20 @@ List all kids who:
 
 ```{r}
 
+df_sub <- df %>% 
+  group_by(ID)  %>% 
+  filter(mean(CHI_MLU) > 2.7)
 
+
+filter(df,CHI_MLU < 1.5 & df$VISIT == 1)
+
+
+df_sub2 <- df %>% 
+  group_by(ID)  %>% 
+  filter(NROW(VISIT)<6)
+
+
+View(df_sub2)
 ```
 
 
@@ -274,6 +288,15 @@ USING ARRANGE
 2. Sort kids to find the kid who produced the least amount of words on the 1st visit.
 
 ```{r}
+df_sub3 <- df %>% 
+  filter(VISIT==6) %>% 
+  arrange(desc(tokens_CHI))
+
+
+
+df_sub4 <- df %>% 
+  filter(VISIT==1) %>% 
+  arrange(tokens_CHI)
 
 
 ```
@@ -285,6 +308,14 @@ USING SELECT
 
 ```{r}
 
+df$ID <- as.character(df$ID)
+
+df_sub5 <- df %>% 
+  filter(Diagnosis == "ASD") %>% 
+  select(c(ID,Diagnosis,CHI_MLU,tokens_CHI))
+
+
+select(df,ID,Diagnosis,Diagnosis,CHI_MLU)
 ```
 
 
@@ -294,6 +325,8 @@ USING MUTATE, SUMMARISE and PIPES
 3. The solution to task above enables us to assess the average amount of words produced by each child. Why don't we just use these average values to describe the language production of the children? What is the advantage of keeping all the data?
 
 ```{r}
-
+df_ext <- df %>% 
+  group_by(ID) %>% 
+  mutate(m_token_CHI = mean(tokens_CHI)) 
 
 ```
