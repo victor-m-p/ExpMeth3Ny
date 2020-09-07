@@ -84,12 +84,20 @@ Welcome to real world of messy data :-)
 
 ```{r}
 
+# Familiarizing ourselves with the data
+# Exploring the header and summary to see the variables and descriptive statistics demo_train 
 head(demo_train)
 summary(demo_train)
+
+# Exploring the header and summary to see the variables and descriptive statistics in LU_train 
 head(LU_train)
 summary(LU_train)
+
+# Exploring the header and summary to see the variables and descriptive statistics in token_train 
 head(token_train)
 summary(token_train)
+
+
 
 ```
 
@@ -195,6 +203,9 @@ Some things to pay attention to:
 df1 <- merge(demo_train_sub, LU_train_sub)
 df <- merge(df1, token_train_sub)
 
+# Renaming a misspelling in the Ethnicity variable for participant nr 6, visit 3
+df[32,4] <- "Bangladeshi"
+
 ```
 
 
@@ -224,8 +235,7 @@ df <- subset(df,select=-c(ADOS,vIQ,nvIQ,Socialization))
 df <- merge(data_sub,df, by = "SUBJ")
 
 # Removing the "SUBJ" variable 
-df <- subset(df,select = -SUBJ)
-# df$VISIT <- NULL
+df$SUBJ <- NULL
 
 
 ```
@@ -264,21 +274,19 @@ List all kids who:
 3. have not completed all trials. Tip: Use pipes to solve this
 
 ```{r}
-
+# Listing all children that have a MLU across visits of more than 2.7 morphemes 
 df_sub <- df %>% 
-  group_by(ID)  %>% 
-  filter(mean(CHI_MLU) > 2.7)
+  group_by(ID)  %>% # Grouping the data by ID to ensure that the mean is taken for each child
+  filter(mean(CHI_MLU) > 2.7) # Filter by mean length of utterances
 
-
+View(df)
+# Listing all children who hava a MLU less than 1.5 for the first visit
 filter(df,CHI_MLU < 1.5 & df$VISIT == 1)
 
-
+# Listing the children who have not completed all trials 
 df_sub2 <- df %>% 
   group_by(ID)  %>% 
-  filter(NROW(VISIT)<6)
-
-
-View(df_sub2)
+  filter(NROW(VISIT)<6) # Filter by how many visits the children has had by counting the number of rows for each child and only include those where the count is less than 6
 ```
 
 
@@ -288,16 +296,23 @@ USING ARRANGE
 2. Sort kids to find the kid who produced the least amount of words on the 1st visit.
 
 ```{r}
+
+# Sort the dataset according to who produced the most words on the 6th visit
 df_sub3 <- df %>% 
   filter(VISIT==6) %>% 
   arrange(desc(tokens_CHI))
 
+# Show the ID of the child who produced the most words
+df_sub3[1,1]
 
 
+# Sort the dataset according to who produced the least amount of words on the first visit
 df_sub4 <- df %>% 
   filter(VISIT==1) %>% 
   arrange(tokens_CHI)
 
+# Show the ID of the child who produced the least words 
+df_sub4[1,1]
 
 ```
 
@@ -307,15 +322,17 @@ USING SELECT
 2. What happens if you include the name of a variable multiple times in a select() call?
 
 ```{r}
-
+# Make the ID a character
 df$ID <- as.character(df$ID)
 
+# Making a subset of the data with ID, MLU and number of words, only for children with ASD
 df_sub5 <- df %>% 
   filter(Diagnosis == "ASD") %>% 
   select(c(ID,Diagnosis,CHI_MLU,tokens_CHI))
 
-
+# Testing what happens if a variable is included twice in the select() function
 select(df,ID,Diagnosis,Diagnosis,CHI_MLU)
+#The variable is only included once
 ```
 
 
@@ -325,6 +342,8 @@ USING MUTATE, SUMMARISE and PIPES
 3. The solution to task above enables us to assess the average amount of words produced by each child. Why don't we just use these average values to describe the language production of the children? What is the advantage of keeping all the data?
 
 ```{r}
+
+# Adding a column with the average amount of words for each child across all visits 
 df_ext <- df %>% 
   group_by(ID) %>% 
   mutate(m_token_CHI = mean(tokens_CHI)) 
