@@ -95,7 +95,25 @@ head(token_train)
 
 summary(token_train)
 
+# Visualize something
+plot(df$Age, df$CHI_MLU, main = "MLU as a function of Age",
+     xlab = "Age in months",
+     ylab = "Child MLU in syllables",
+     pch = 19, frame = FALSE,
+     col = df$VISIT) #behold lige nu
 
+# Plot showing Child MLU as a function of age
+ggplot(df, aes(x=Age, y=CHI_MLU, col=VISIT)) + 
+  geom_point(aes(y=CHI_MLU))+
+  geom_smooth(method=lm) +
+  labs(x = "Age (months)", y = "Child MLU")+
+  ggtitle("Child MLU as a function of age")
+
+ggplot(df, aes(x=Age, y=CHI_MLU, col=VISIT)) + 
+  geom_point(aes(y=CHI_MLU))+
+  geom_smooth(method=lm) +
+  labs(x = "Age (months)", y = "Child MLU")+
+  ggtitle("Child MLU as a function of age")
 ```
 
 Before being able to combine the data sets we need to make sure the relevant variables have the same names and the same kind of values.
@@ -263,6 +281,42 @@ df$Diagnosis <- ifelse(df$Diagnosis == "A", "ASD","TD")
 
 # Writing as a csv file
 write.csv(df, "cleanData.csv")
+```
+
+Extra visualization + testing for exploratory purposes:
+```{r}
+# Plot showing Child MLU as a function of age
+ggplot(df, aes(x = Age, y = CHI_MLU, col = VISIT)) + 
+  geom_point(aes(y = CHI_MLU))+
+  geom_smooth(method = lm) +
+  labs(x = "Age (months)", y = "Child MLU")+
+  ggtitle("Child MLU as a function of age")
+
+# Plot showing Child MLU as a function of socialization
+ggplot(df, aes(x = Socialization, y = CHI_MLU, col = VISIT)) + 
+  geom_point(aes(y = CHI_MLU))+
+  geom_smooth(method = lm) +
+  labs(x = "Socialization", y = "Child MLU")+
+  ggtitle("Child MLU as a function of Socialization") #Looks to be a correlation between sociability and MLU
+
+# Testing whether there is a correlation between socialization + Child MLU
+cor.test(df$Socialization, df$CHI_MLU,
+         method = "spearman") #There IS actually a significant correlation with a Spearmans rho of 0.43. 
+
+
+# Plot showing Child MLU and Ethnicity
+ggplot(df, aes(x = Ethnicity, y = CHI_MLU, col = Ethnicity)) + 
+  geom_bar(stat = 'identity')
+  geom_smooth(method = lm) +
+  labs(x = "Ethnicity", y = "Child MLU")+
+  ggtitle("Child MLU and Ethnicity") #'Slight' overrepresentation of Caucausian people...
+  
+# Plot showing mean Child MLU for Diagnosis
+ggplot(df, aes(x = Diagnosis, y = mean(CHI_MLU), fill = Diagnosis)) + 
+  geom_bar(stat = 'identity')+
+  labs(x = "Diagnosis", y = "Child MLU")+
+  ggtitle("Child MLU and Diagnosis") #Higher MLU for TD than ASD
+  
 ```
 
 
