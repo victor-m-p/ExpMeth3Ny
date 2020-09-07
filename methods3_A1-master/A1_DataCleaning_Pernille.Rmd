@@ -95,6 +95,11 @@ head(token_train)
 
 summary(token_train)
 
+# Visualize something
+plot(df$Age, df$CHI_MLU, main = "MLU as a function of Age",
+     xlab = "Age in months", ylab = "Child MLU in syllables",
+     pch = 19, frame = FALSE)
+
 
 ```
 
