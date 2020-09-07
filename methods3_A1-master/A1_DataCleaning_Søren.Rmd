@@ -82,16 +82,18 @@ In particular:
 Welcome to real world of messy data :-)
 
 ```{r}
-head(demo_train)
+#familiarizing ourselves with the data
 
+#exploraing the header and summary to see the variables and descriptive statistics demo_train 
+head(demo_train)
 summary(demo_train)
 
+#exploraing the header and summary to see the variables and descriptive statistics in LU_train 
 head(LU_train)
-
 summary(LU_train)
 
+#exploraing the header and summary to see the variables and descriptive statistics in token_train 
 head(token_train)
-
 summary(token_train)
 
 ```
@@ -249,7 +251,7 @@ df$Diagnosis <- ifelse(df$Diagnosis == 'A', 'ASD', 'TD')
 
 df$Diagnosis <- as.factor(df$Diagnosis)
 
-getwd()
+df[32,8] <- "Bangladeshi"
 
 write.csv(df, file = "/CogSci/Semester 3/Experimental Methods 3/ExpMeth3Ny/methods3_A1-master/clean_data_A1.csv")
 
@@ -306,6 +308,7 @@ sub_ASD <-
 
 sub_ASD2 <-
   df %>% filter(Diagnosis == 'ASD') %>% select(CHI_MLU, tokens_CHI, tokens_CHI)
+
 
 ```
 
