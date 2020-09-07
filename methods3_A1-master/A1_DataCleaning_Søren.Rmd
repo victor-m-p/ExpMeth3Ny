@@ -283,7 +283,15 @@ USING ARRANGE
 2. Sort kids to find the kid who produced the least amount of words on the 1st visit.
 
 ```{r}
+token6 <- 
+  df %>% subset(VISIT == 6) %>% arrange(desc(tokens_CHI))
 
+token6[1, 1]
+
+token1 <- 
+  df %>% subset(VISIT == 1) %>% arrange(tokens_CHI)
+
+token1[1, 1]
 
 ```
 
@@ -293,6 +301,11 @@ USING SELECT
 2. What happens if you include the name of a variable multiple times in a select() call?
 
 ```{r}
+sub_ASD <-
+  df %>% filter(Diagnosis == 'ASD') %>% select(CHI_MLU, tokens_CHI)
+
+sub_ASD2 <-
+  df %>% filter(Diagnosis == 'ASD') %>% select(CHI_MLU, tokens_CHI, tokens_CHI)
 
 ```
 
@@ -303,6 +316,8 @@ USING MUTATE, SUMMARISE and PIPES
 3. The solution to task above enables us to assess the average amount of words produced by each child. Why don't we just use these average values to describe the language production of the children? What is the advantage of keeping all the data?
 
 ```{r}
+df %>% group_by(ID) %>% mutate(m_tokens_CHI = mean(tokens_CHI))
+
 
 
 ```
