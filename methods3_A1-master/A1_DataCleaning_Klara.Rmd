@@ -224,6 +224,7 @@ df <- merge(data_sub,df, by = "SUBJ")
 
 # Removing the "SUBJ" variable 
 df <- subset(df,select = -SUBJ)
+# df$VISIT <- NULL
 
 
 ```
@@ -237,7 +238,7 @@ Now we want to
 
 ```{r}
 # Substituting the numbers in the Gender variable for F for females and M for males as well as making the variable a factor
-df$Gender <- ifelse(df$Gender=="1","F","M")
+df$Gender <- ifelse(df$Gender=="1","M","F")
 df$Gender <- as.factor(df$Gender)
 
 # Substituting the letters in the Diagnosis variable for ASD instead of A and TD instead of B as well as making the variable a factor
