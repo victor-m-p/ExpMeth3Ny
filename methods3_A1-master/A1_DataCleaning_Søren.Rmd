@@ -323,10 +323,3 @@ df1 <- df %>% group_by(ID) %>% mutate(m_tokens_CHI = mean(tokens_CHI))
 # The children develop over time. We would not be able to explore this change if we only looked at the averages.
 
 ```
-
-
-
-
-
-
-
