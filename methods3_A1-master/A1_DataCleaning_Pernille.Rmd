@@ -311,9 +311,9 @@ ggplot(df, aes(x = Ethnicity, y = CHI_MLU, col = Ethnicity)) +
   labs(x = "Ethnicity", y = "Child MLU")+
   ggtitle("Child MLU and Ethnicity") #'Slight' overrepresentation of Caucausian people...
   
-# Plot showing mean Child MLU for Diagnosis
-ggplot(df, aes(x = Diagnosis, y = mean(CHI_MLU), fill = Diagnosis)) + 
-  geom_bar(stat = 'identity')+
+# Plot showing Child MLU for Diagnosis
+ggplot(df, aes(x = Diagnosis, y = CHI_MLU, fill = Diagnosis)) + 
+  geom_count(aes(y=CHI_MLU))+
   labs(x = "Diagnosis", y = "Child MLU")+
   ggtitle("Child MLU and Diagnosis") #Higher MLU for TD than ASD
   
