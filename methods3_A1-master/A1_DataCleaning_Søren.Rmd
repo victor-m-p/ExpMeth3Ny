@@ -108,9 +108,13 @@ Tip: look through the chapter on data transformation in R for data science (http
 
 
 ```{r}
+#renaming the column names
 colnames(demo_train)[1] <- "SUBJ"
 colnames(demo_train)[2] <- "VISIT"
 
+
+
+#cleaning the 
 demo_train$SUBJ <- gsub('[.]','', demo_train$SUBJ)
 LU_train$SUBJ <- gsub('[.]','', LU_train$SUBJ)
 token_train$SUBJ <- gsub('[.]','', token_train$SUBJ)
@@ -192,11 +196,15 @@ df1 <- merge(demo_train_sub, LU_train_sub)
 
 df <- merge(df1, token_train_sub)
 
+colnames(df)[8] <- "vIQ"
+
+colnames(df)[9] <- "nvIQ"
+
 ```
 
 
 2f. Only using clinical measures from Visit 1
-In order for our models to be useful, we want to miimize the need to actually test children as they develop. In other words, we would like to be able to understand and predict the children's linguistic development after only having tested them once. Therefore we need to make sure that our ADOS, MullenRaw, ExpressiveLangRaw and Socialization variables are reporting (for all visits) only the scores from visit 1.
+In order for our models to be useful, we want to minimize the need to actually test children as they develop. In other words, we would like to be able to understand and predict the children's linguistic development after only having tested them once. Therefore we need to make sure that our ADOS, MullenRaw, ExpressiveLangRaw and Socialization variables are reporting (for all visits) only the scores from visit 1.
 
 A possible way to do so:
 * create a new dataset with only visit 1, child id and the 4 relevant clinical variables to be merged with the old dataset
@@ -206,6 +214,22 @@ A possible way to do so:
 
 
 ```{r}
+# Wishing to only keep the "visit 1" scores in the four clinical variables of the ADOS score, the verbal IQ, the nonverbal IQ and the socialization score, a subset is created where those four, subject ID is included only for the first visit for each participant. A column with a number ID is also created while there is just one column for each participant, which can then be used as identifier instead of the "SUBJ" variable.   
+data_sub <- df %>%
+  select(SUBJ, VISIT, ADOS, vIQ, nvIQ, Socialization) %>% # Selecting the desired variables
+  filter(VISIT == "1") %>% # Choosing only the rows from the first visit
+  subset(select = -VISIT) %>% # Removing the "VISIT" column
+  rowid_to_column("ID") # Creating a new column with a number for each row, which in this case equals each participant
+
+# Removing the existing clinical variables from the dataframe "df"
+df <- subset(df, select = -c(ADOS, vIQ, nvIQ, Socialization))
+
+# Merging the two dataframes by the "SUBJ" variable
+df <- merge(data_sub, df, by = "SUBJ")
+
+# Removing the "SUBJ" variable
+df <- subset(df, select = -SUBJ)
+
 
 ```
 
@@ -217,6 +241,17 @@ Now we want to
 * Save the data set using into a csv file. Hint: look into write.csv()
 
 ```{r}
+df$Gender <- ifelse(df$Gender == 1, 'M', 'F')
+
+df$Gender <- as.factor(df$Gender)
+
+df$Diagnosis <- ifelse(df$Diagnosis == 'A', 'ASD', 'TD')
+
+df$Diagnosis <- as.factor(df$Diagnosis)
+
+getwd()
+
+write.csv(df, file = "/CogSci/Semester 3/Experimental Methods 3/ExpMeth3Ny/methods3_A1-master/clean_data_A1.csv")
 
 ```
 
@@ -233,7 +268,11 @@ List all kids who:
 3. have not completed all trials. Tip: Use pipes to solve this
 
 ```{r}
+sub_df1 <- df %>% group_by(ID) %>% filter(mean(CHI_MLU) > 2.7)
 
+sub_df2 <- df %>% filter(VISIT == 1) %>% filter(CHI_MLU < 1.5)
+
+sub_df3 <- df %>% group_by(ID) %>% filter(sum(VISIT) != 21)
 
 ```
 
@@ -244,7 +283,15 @@ USING ARRANGE
 2. Sort kids to find the kid who produced the least amount of words on the 1st visit.
 
 ```{r}
+token6 <- 
+  df %>% subset(VISIT == 6) %>% arrange(desc(tokens_CHI))
 
+token6[1, 1]
+
+token1 <- 
+  df %>% subset(VISIT == 1) %>% arrange(tokens_CHI)
+
+token1[1, 1]
 
 ```
 
@@ -254,6 +301,11 @@ USING SELECT
 2. What happens if you include the name of a variable multiple times in a select() call?
 
 ```{r}
+sub_ASD <-
+  df %>% filter(Diagnosis == 'ASD') %>% select(CHI_MLU, tokens_CHI)
+
+sub_ASD2 <-
+  df %>% filter(Diagnosis == 'ASD') %>% select(CHI_MLU, tokens_CHI, tokens_CHI)
 
 ```
 
@@ -264,6 +316,8 @@ USING MUTATE, SUMMARISE and PIPES
 3. The solution to task above enables us to assess the average amount of words produced by each child. Why don't we just use these average values to describe the language production of the children? What is the advantage of keeping all the data?
 
 ```{r}
+df %>% group_by(ID) %>% mutate(m_tokens_CHI = mean(tokens_CHI))
+
 
 
 ```
