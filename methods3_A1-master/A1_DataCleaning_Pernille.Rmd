@@ -73,7 +73,7 @@ Load the three data sets, after downloading them from Github and saving them in 
 ```{r}
 demo_train <- read_csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/demo_train.csv")
 LU_train <- read_csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/LU_train.csv")
-token_train <- read_csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/token_train.csv")
+token_train <- read.csv("/Users/pernillebrams/Desktop/EM3/ExpMeth3Ny/methods3_A1-master/token_train.csv")
 ```
 
 Explore the 3 datasets (e.g. visualize them, summarize them, etc.). You will see that the data is messy, since the psychologist collected the demographic data, the linguist analyzed the length of utterance in May 2014 and the fumbling jack-of-all-trades analyzed the words several months later. 
